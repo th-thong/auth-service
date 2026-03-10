@@ -44,7 +44,7 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	logger.Info("OAuth exchange successfully",zap.String("user_id", user.ID.String()))
+	logger.Info("OAuth exchange successfully", zap.String("user_id", user.ID.String()))
 
 	h.setTokenCookies(c, tokens)
 	c.JSON(http.StatusOK, gin.H{
@@ -88,7 +88,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 func (h *AuthHandler) Logout(c *gin.Context) {
 	logger := utils.GetLogger(c)
 	refreshToken, _ := c.Cookie("refresh_token")
-	
+
 	rows, err := h.oauthService.Logout(refreshToken)
 	if err != nil || rows != 1 {
 		if err != nil {
@@ -97,7 +97,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"detail": "Logout failed."})
 		return
 	}
-	
+
 	logger.Info("Logout sucessfullly")
 	h.clearTokenCookies(c)
 	c.JSON(http.StatusOK, gin.H{"detail": "Successfully logged out."})
@@ -117,17 +117,17 @@ func (h *AuthHandler) setTokenCookies(c *gin.Context, tokens *model.TokenPair) {
 	accessMaxAge := h.cfg.AccessTokenMaxAge * 60
 	refreshMaxAge := h.cfg.RefreshTokenMaxAge * 24 * 60 * 60
 
-	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("access_token", tokens.AccessToken, accessMaxAge,
 		"/", h.cfg.CookieDomain, true, true)
 	c.SetCookie("refresh_token", tokens.RefreshToken, refreshMaxAge,
-		"/account/", h.cfg.CookieDomain, true, true)
+		"/", h.cfg.CookieDomain, true, true)
 }
 
 func (h *AuthHandler) clearTokenCookies(c *gin.Context) {
-	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("access_token", "", -1, "/", h.cfg.CookieDomain, true, true)
-	c.SetCookie("refresh_token", "", -1, "/account/", h.cfg.CookieDomain, true, true)
+	c.SetCookie("refresh_token", "", -1, "/", h.cfg.CookieDomain, true, true)
 }
 
 func formatUser(user *model.User) gin.H {
