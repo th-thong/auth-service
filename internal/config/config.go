@@ -18,6 +18,7 @@ type Config struct {
 	RefreshTokenMaxAge int // days
 	CookieSecure       bool
 	CookieDomain       string
+	ConveneLogUrl string
 }
 
 func Load() *Config {
@@ -33,6 +34,7 @@ func Load() *Config {
 		RefreshTokenMaxAge: getEnvInt("REFRESH_TOKEN_MAX_AGE", 1), // 1 day
 		CookieSecure:       getEnv("COOKIE_SECURE", "true") == "true",
 		CookieDomain:       getEnv("COOKIE_DOMAIN", ""),
+		ConveneLogUrl: mustEnv("CONVENE_LOG_URL"),
 	}
 	return cfg
 }

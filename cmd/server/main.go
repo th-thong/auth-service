@@ -40,7 +40,7 @@ func main() {
 	gameAccountService := service.NewGameAccountService(gameAccountRepo)
 
 	authHandler := handler.NewAuthHandler(oauthService, cfg)
-	gameAccountHandler := handler.NewGameAccountHandler(gameAccountService)
+	gameAccountHandler := handler.NewGameAccountHandler(gameAccountService, cfg)
 
 	r := gin.New()
 
@@ -59,7 +59,6 @@ func main() {
 			auth.GET("/game-accounts/", gameAccountHandler.List)
 			auth.POST("/game-accounts/", gameAccountHandler.Create)
 			auth.DELETE("/game-accounts/:uid/", gameAccountHandler.Delete)
-			auth.PATCH("/game-accounts/:uid/", gameAccountHandler.UpdateOAuthCode)
 		}
 	}
 
