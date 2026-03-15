@@ -129,3 +129,13 @@ func (s *OAuthService) generateTokenPair(user *model.User) (*model.TokenPair, er
 		RefreshToken: refreshToken,
 	}, nil
 }
+
+// UpsertUser creates or updates a user based on OAuth info
+func (s *OAuthService) UpsertUser(ctx context.Context, userInfo *model.OAuthUserInfo) (*model.User, error) {
+	return s.userRepo.Upsert(userInfo)
+}
+
+// GenerateTokenPair generates access and refresh tokens for a user
+func (s *OAuthService) GenerateTokenPair(user *model.User) (*model.TokenPair, error) {
+	return s.generateTokenPair(user)
+}

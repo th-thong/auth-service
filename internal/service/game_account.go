@@ -24,8 +24,8 @@ func (s *GameAccountService) List(userID uuid.UUID) ([]model.GameAccount, error)
 	return accounts, nil
 }
 
-func (s *GameAccountService) Create(userID uuid.UUID, uid string, oauthCode *string) (*model.GameAccount, error) {
-	account, err := s.repo.Create(userID, uid, oauthCode)
+func (s *GameAccountService) Create(userID uuid.UUID, uid string) (*model.GameAccount, error) {
+	account, err := s.repo.Create(userID, uid)
 	if err != nil {
 		return nil, fmt.Errorf("GameAccountService.Create: %w", err)
 	}
@@ -38,12 +38,4 @@ func (s *GameAccountService) Delete(id uuid.UUID, uid string) error {
 		return fmt.Errorf("GameAccountService.Delete: %w", err)
 	}
 	return nil
-}
-
-func (s *GameAccountService) UpdateOAuthCode(userID uuid.UUID, uid string, oauthCode *string) (*model.GameAccount, error) {
-    account, err := s.repo.UpdateOAuthCode(userID, uid, oauthCode)
-	if err != nil {
-		return nil, fmt.Errorf("GameAccountService.UpdateOAuthCode: %w", err)
-	}
-	return account, nil
 }

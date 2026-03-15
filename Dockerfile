@@ -3,14 +3,11 @@ FROM golang:1.25-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache ca-certificates upx
 RUN echo "appgroup:x:1000:" > /etc/group_app && \
-    echo "appuser:x:1000:1000:App User:/ /sbin/nologin" > /etc/passwd_app
+    echo "appuser:x:1000:1000:App User:/:/sbin/nologin" > /etc/passwd_app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN apk add --no-cache upx
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o main ./cmd/server/main.go
-RUN upx --best --lzma main
-
 FROM scratch
 
 WORKDIR /app
