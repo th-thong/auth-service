@@ -4,16 +4,24 @@ import (
 	"net/http"
 	"strings"
 
-	"gitlab.com/my-game873206/auth-service/internal/service"
-
+	"firebase.google.com/go/v4/auth"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	"gitlab.com/my-game873206/auth-service/internal/repository"
 	"go.uber.org/zap"
 )
 
-func JWTAuth(jwtService *service.JWTService) gin.HandlerFunc {
+type FirebaseService struct {
+	AuthClient *auth.Client
+}
+
+func FirebaseAuth(fbService *FirebaseService, userRepo *repository.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Try cookie first, then Authorization header
+
+		if fbService == nil || fbService.AuthClient == nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"detail": "Firebase service not initialized."})
+			return
+		}
+
 		tokenStr, err := c.Cookie("access_token")
 		if err != nil {
 			authHeader := c.GetHeader("Authorization")
@@ -27,23 +35,25 @@ func JWTAuth(jwtService *service.JWTService) gin.HandlerFunc {
 			return
 		}
 
-		claims, err := jwtService.ValidateAccessToken(tokenStr)
+		decodedToken, err := fbService.AuthClient.VerifyIDToken(c.Request.Context(), tokenStr)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"detail": "Token is invalid or expired."})
 			return
 		}
 
-		userID, err := uuid.Parse(claims.UserID)
+		user, err := userRepo.FindByOAuth("firebase", decodedToken.UID)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"detail": "Invalid token claims."})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"detail": "User not found in system."})
 			return
 		}
 
-		newLogger := zap.L().With(zap.String("user_id", claims.UserID))
+		newLogger := zap.L().With(zap.String("user_id", user.ID.String()))
 		c.Set("zapLogger", newLogger)
 
-		c.Set("user_id", userID)
-		c.Set("user_email", claims.Email)
+		c.Set("user_id", user.ID)
+		c.Set("user_email", user.Email)
+		c.Set("firebase_uid", decodedToken.UID)
+
 		c.Next()
 	}
 }

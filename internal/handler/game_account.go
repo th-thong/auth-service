@@ -48,7 +48,6 @@ func (h *GameAccountHandler) Create(c *gin.Context) {
 
 	var req struct {
 		UID       string  `json:"uid" binding:"required,max=20"`
-		OAuthCode *string `json:"oauth_code"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -57,7 +56,7 @@ func (h *GameAccountHandler) Create(c *gin.Context) {
 		return
 	}
 
-	account, err := h.service.Create(userID, req.UID, req.OAuthCode)
+	account, err := h.service.Create(userID, req.UID)
 	if err != nil {
 		if errors.Is(err, repository.ErrDuplicate) {
 			logger.Warn("Game account creation conflict", zap.String("uid", req.UID), zap.Error(err))

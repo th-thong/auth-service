@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
@@ -19,6 +20,8 @@ type Config struct {
 	CookieSecure       bool
 	CookieDomain       string
 	ConveneLogUrl string
+	FbServiceAcc string
+	WhiteList []string
 }
 
 func Load() *Config {
@@ -35,8 +38,21 @@ func Load() *Config {
 		CookieSecure:       getEnv("COOKIE_SECURE", "true") == "true",
 		CookieDomain:       getEnv("COOKIE_DOMAIN", ""),
 		ConveneLogUrl: mustEnv("CONVENE_LOG_URL"),
+		FbServiceAcc: mustEnv("FIREBASE_SERVICE_ACCOUNT"),
+		WhiteList: parseList(mustEnv("WHITE_LIST")),
 	}
 	return cfg
+}
+
+func parseList(s string) []string {
+    parts := strings.Split(s, ",")
+    result := make([]string, 0, len(parts))
+    for _, p := range parts {
+        if trimmed := strings.TrimSpace(p); trimmed != "" {
+            result = append(result, trimmed)
+        }
+    }
+    return result
 }
 
 func getEnv(key, fallback string) string {

@@ -23,7 +23,7 @@ func NewGameAccountRepository(db *sql.DB) *GameAccountRepository {
 
 func (r *GameAccountRepository) ListByUserID(userID uuid.UUID) ([]model.GameAccount, error) {
 	rows, err := r.db.Query(
-		`SELECT user_id, oauth_code, uid, created_at
+		`SELECT user_id, uid, created_at
 		 FROM game_accounts WHERE user_id = $1 ORDER BY created_at DESC`,
 		userID,
 	)
@@ -35,7 +35,7 @@ func (r *GameAccountRepository) ListByUserID(userID uuid.UUID) ([]model.GameAcco
 	var accounts []model.GameAccount
 	for rows.Next() {
 		var a model.GameAccount
-		if err := rows.Scan(&a.UserID, &a.OAuthCode, &a.UID, &a.CreatedAt); err != nil {
+		if err := rows.Scan(&a.UserID, &a.UID, &a.CreatedAt); err != nil {
 			return nil, fmt.Errorf("GameAccountRepository.ListByUserID scan: %w", err)
 		}
 		accounts = append(accounts, a)
@@ -46,14 +46,14 @@ func (r *GameAccountRepository) ListByUserID(userID uuid.UUID) ([]model.GameAcco
 	return accounts, nil
 }
 
-func (r *GameAccountRepository) Create(userID uuid.UUID, uid string, oauthCode *string) (*model.GameAccount, error) {
+func (r *GameAccountRepository) Create(userID uuid.UUID, uid string) (*model.GameAccount, error) {
 	a := &model.GameAccount{}
 	err := r.db.QueryRow(
-		`INSERT INTO game_accounts (user_id, uid, oauth_code)
-         VALUES ($1, $2, $3)
-         RETURNING user_id, oauth_code, uid, created_at`,
-		userID, uid, oauthCode,
-	).Scan(&a.UserID, &a.OAuthCode, &a.UID, &a.CreatedAt)
+		`INSERT INTO game_accounts (user_id, uid)
+         VALUES ($1, $2)
+         RETURNING user_id, uid, created_at`,
+		userID, uid,
+	).Scan(&a.UserID, &a.UID, &a.CreatedAt)
 
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
@@ -77,35 +77,4 @@ func (r *GameAccountRepository) Delete(userID uuid.UUID, uid string) error {
 		return ErrNotFound
 	}
 	return nil
-}
-
-func (r *GameAccountRepository) UpdateOAuthCode(userID uuid.UUID, uid string, oauthCode *string) (*model.GameAccount, error) {
-	a := &model.GameAccount{}
-	err := r.db.QueryRow(
-		`UPDATE game_accounts SET oauth_code = $1
-         WHERE user_id = $2 AND uid = $3
-         RETURNING user_id, oauth_code, uid, created_at`,
-		oauthCode, userID, uid,
-	).Scan(&a.UserID, &a.OAuthCode, &a.UID, &a.CreatedAt)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, ErrNotFound
-	}
-	if err != nil {
-		return nil, fmt.Errorf("GameAccountRepository.UpdateOAuthCode: %w", err)
-	}
-	return a, nil
-}
-
-func (r *GameAccountRepository) FindByID(id uuid.UUID) (*model.GameAccount, error) {
-	a := &model.GameAccount{}
-	err := r.db.QueryRow(
-		`SELECT user_id, oauth_code, uid, created_at FROM game_accounts WHERE id = $1`, id,
-	).Scan(&a.UserID, &a.OAuthCode, &a.UID, &a.CreatedAt)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, ErrNotFound
-	}
-	if err != nil {
-		return nil, fmt.Errorf("GameAccountRepository.FindByID: %w", err)
-	}
-	return a, nil
 }

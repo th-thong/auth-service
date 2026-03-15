@@ -46,7 +46,6 @@ func RunMigrations(db *sql.DB) error {
 
 		`CREATE TABLE IF NOT EXISTS game_accounts (
 			user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			oauth_code VARCHAR(40),
 			uid        VARCHAR(10) NOT NULL,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			PRIMARY KEY (user_id, uid)

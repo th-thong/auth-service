@@ -17,7 +17,6 @@ type User struct {
 
 type GameAccount struct {
     UserID    uuid.UUID `db:"user_id" json:"user_id"`
-    OAuthCode *string   `db:"oauth_code" json:"oauth_code"`
     UID       string    `db:"uid" json:"uid"`
     CreatedAt time.Time `db:"created_at" json:"created_at"`
 }
